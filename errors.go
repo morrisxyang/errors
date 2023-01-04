@@ -27,3 +27,9 @@ func (fd *fundamentalError) Error() string {
 	}
 	return ""
 }
+
+// Cause 返回内部的错误
+func (fd *fundamentalError) Cause() error { return fd.cause }
+
+// Unwrap 支持Go 1.13+ error chains.
+func (fd *fundamentalError) Unwrap() error { return fd.cause }
