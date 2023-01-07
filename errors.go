@@ -33,3 +33,13 @@ func (fd *fundamentalError) Cause() error { return fd.cause }
 
 // Unwrap 支持Go 1.13+ error chains.
 func (fd *fundamentalError) Unwrap() error { return fd.cause }
+
+// Code 返回 code
+func (fd *fundamentalError) Code() int {
+	return fd.code
+}
+
+// Msg 返回 msg
+func (fd *fundamentalError) Msg() string {
+	return fd.msg
+}
