@@ -3,6 +3,7 @@ package errors
 
 import (
 	"fmt"
+	"io"
 )
 
 // fundamentalError 定义了包含 stack 的 error
@@ -42,4 +43,27 @@ func (fd *fundamentalError) Code() int {
 // Msg 返回 msg
 func (fd *fundamentalError) Msg() string {
 	return fd.msg
+}
+
+// Format 实现 Format 接口
+func (fd *fundamentalError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			if fd.detail != "" {
+				_, _ = io.WriteString(s, fd.detail)
+			}
+			if fd.Cause() != nil {
+				_, _ = fmt.Fprintf(s, "\nCause by %+v", fd.Cause())
+			}
+			return
+		}
+		fallthrough
+	case 's':
+		_, _ = io.WriteString(s, fd.Error())
+	case 'q':
+		_, _ = fmt.Fprintf(s, "%q", fd.Error())
+	default:
+		_, _ = fmt.Fprintf(s, "unsupported format: %%!%c, use %%s: %s)", verb, fd.Error())
+	}
 }
