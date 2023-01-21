@@ -31,3 +31,13 @@ func NewWithCode(code int, msg string) error {
 		code:   code,
 	}
 }
+
+// NewWithCodef 使用 format 格式的信息创建一个携带堆栈的错误
+func NewWithCodef(code int, format string, args ...interface{}) error {
+	return &fundamentalError{
+		msg:    fmt.Sprintf(format, args...),
+		detail: fmt.Sprintf("%v, %v", callerFuncInfo(), fmt.Sprintf(format, args...)),
+		stack:  callers(),
+		code:   code,
+	}
+}
