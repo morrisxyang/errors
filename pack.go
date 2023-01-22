@@ -1,6 +1,7 @@
 package errors
 
 import (
+	stderrors "errors"
 	"fmt"
 )
 
@@ -40,4 +41,96 @@ func NewWithCodef(code int, format string, args ...interface{}) error {
 		stack:  callers(),
 		code:   code,
 	}
+}
+
+// Wrap 使用传入的信息包装错误, 携带堆栈信息
+// 如果传入的 err 已经有错误码, 直接延用
+// 如果传入的 err 已经有堆栈, 不再设置堆栈
+// 如果传入的 err 为 nil, Wrap 将返回 nil
+func Wrap(err error, msg string) error {
+	if err == nil {
+		return nil
+	}
+	wrapErr := &fundamentalError{
+		cause:  err,
+		msg:    msg,
+		detail: fmt.Sprintf("%v, %v", callerFuncInfo(), msg),
+	}
+	var fd *fundamentalError
+	if stderrors.As(err, &fd) {
+		// 链路上有同类型错误的时候，延用 code
+		wrapErr.code = fd.code
+	} else {
+		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		wrapErr.stack = callers()
+	}
+	return wrapErr
+}
+
+// Wrapf 使用 format 格式的信息包装错误, 携带堆栈信息
+// 如果传入的 err 已经有错误码, 直接延用
+// 如果传入的 err 已经有堆栈, 不再设置堆栈
+// 如果传入的 err 为 nil, Wrapf 将返回 nil
+func Wrapf(err error, format string, args ...interface{}) error {
+	if err == nil {
+		return nil
+	}
+	wrapErr := &fundamentalError{
+		cause:  err,
+		msg:    fmt.Sprintf(format, args...),
+		detail: fmt.Sprintf("%v, %v", callerFuncInfo(), fmt.Sprintf(format, args...)),
+	}
+	var fd *fundamentalError
+	if stderrors.As(err, &fd) {
+		// 链路上有同类型错误的时候，延用 code
+		wrapErr.code = fd.code
+	} else {
+		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		wrapErr.stack = callers()
+	}
+	return wrapErr
+}
+
+// WrapWithCode 使用传入的信息包装错误, 携带堆栈信息
+// 即使传入的 err 已经有错误码, 不会延用, 而是使用传入的 code
+// 如果传入的 err 已经有堆栈, 不再设置堆栈
+// 如果传入的 err 为 nil, WrapWithCode 将返回 nil
+func WrapWithCode(err error, code int, msg string) error {
+	if err == nil {
+		return nil
+	}
+	wrapErr := &fundamentalError{
+		cause:  err,
+		msg:    msg,
+		detail: fmt.Sprintf("%v, %v", callerFuncInfo(), msg),
+		code:   code,
+	}
+	var fd *fundamentalError
+	if !stderrors.As(err, &fd) {
+		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		wrapErr.stack = callers()
+	}
+	return wrapErr
+}
+
+// WrapWithCodef 使用 format 格式的信息包装错误, 携带堆栈信息
+// 即使传入的 err 已经有错误码, 不会延用, 而是使用传入的 code
+// 如果传入的 err 已经有堆栈, 不再设置堆栈
+// 如果传入的 err 为 nil, WrapWithCodef 将返回 nil
+func WrapWithCodef(err error, code int, format string, args ...interface{}) error {
+	if err == nil {
+		return nil
+	}
+	wrapErr := &fundamentalError{
+		cause:  err,
+		msg:    fmt.Sprintf(format, args...),
+		detail: fmt.Sprintf("%v, %v", callerFuncInfo(), fmt.Sprintf(format, args...)),
+		code:   code,
+	}
+	var fd *fundamentalError
+	if !stderrors.As(err, &fd) {
+		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		wrapErr.stack = callers()
+	}
+	return wrapErr
 }
