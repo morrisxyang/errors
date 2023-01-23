@@ -3,6 +3,7 @@ package errors
 import (
 	stderrors "errors"
 	"fmt"
+	"math"
 )
 
 // New 使用传入的信息创建一个携带堆栈的错误
@@ -133,4 +134,31 @@ func WrapWithCodef(err error, code int, format string, args ...interface{}) erro
 		wrapErr.stack = callers()
 	}
 	return wrapErr
+}
+
+// Code 获取 code
+func Code(e error) int {
+	if e == nil {
+		return 0
+	}
+	// int32最小值
+	const unknownCode = math.MinInt32
+	err, ok := e.(*fundamentalError)
+	if !ok {
+		return unknownCode
+	}
+	return err.Code()
+}
+
+// Msg 获取 msg
+func Msg(e error) string {
+	if e == nil {
+		return ""
+	}
+	const unknownMsg = "unknown error"
+	err, ok := e.(*fundamentalError)
+	if !ok {
+		return unknownMsg
+	}
+	return err.Msg()
 }
