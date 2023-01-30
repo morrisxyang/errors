@@ -18,7 +18,7 @@ type fundamentalError struct {
 // Error 实现 Error 接口, 打印链路 detail 信息, 包含文件名、行数等
 func (fd *fundamentalError) Error() string {
 	if fd.detail != "" && fd.cause != nil {
-		return fmt.Sprintf("%v \nCause by %v", fd.detail, fd.cause.Error())
+		return fmt.Sprintf("%v"+defaultCfg.ErrorConnectionFlag+"%v", fd.detail, fd.cause.Error())
 	}
 	if fd.detail != "" {
 		return fmt.Sprintf("%v", fd.detail)
@@ -60,7 +60,7 @@ func (fd *fundamentalError) Format(s fmt.State, verb rune) {
 				_, _ = io.WriteString(s, fd.detail)
 			}
 			if fd.Cause() != nil {
-				_, _ = fmt.Fprintf(s, "\nCause by %+v", fd.Cause())
+				_, _ = fmt.Fprintf(s, defaultCfg.ErrorConnectionFlag+"%+v", fd.Cause())
 			}
 			if fd.stack != nil {
 				stackTrace = fd.stack

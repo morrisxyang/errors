@@ -2,13 +2,15 @@ package errors
 
 // Config 配置项
 type Config struct {
-	NoStack  bool
-	NoDetail bool
+	NoStack             bool
+	NoDetail            bool
+	ErrorConnectionFlag string
 }
 
 var defaultCfg = &Config{
-	NoStack:  false,
-	NoDetail: false,
+	NoStack:             false,
+	NoDetail:            false,
+	ErrorConnectionFlag: " \n\tCause by ",
 }
 
 // SetCfg 设置配置
