@@ -11,7 +11,11 @@ import (
 func TestErrorPrint(t *testing.T) {
 	convey.Convey("test", t, func() {
 		convey.Convey("wrap err", func() {
+
 			err := a()
+			fmt.Printf("test %%s wrap err: %s\n", err)
+			//  %+v
+			fmt.Printf("test %%+v wrap err: %+v\n", err)
 			// %v
 			fmt.Printf("test %%v wrap err: %v\n", err)
 			s1 := fmt.Sprintf("err: %v\n", err)

@@ -10,7 +10,7 @@ type Config struct {
 var defaultCfg = &Config{
 	NoStack:             false,
 	NoDetail:            false,
-	ErrorConnectionFlag: " \n\tCause by ",
+	ErrorConnectionFlag: "\nCaused by: ",
 }
 
 // SetCfg 设置配置
