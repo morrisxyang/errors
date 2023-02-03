@@ -18,13 +18,13 @@ type fundamentalError struct {
 // Error 实现 Error 接口, 打印链路 detail 信息, 包含文件名、行数等
 func (fd *fundamentalError) Error() string {
 	if fd.detail != "" && fd.cause != nil {
-		return fmt.Sprintf("%v"+defaultCfg.ErrorConnectionFlag+"%v", fd.detail, fd.cause.Error())
+		return fmt.Sprintf("%s"+defaultCfg.ErrorConnectionFlag+"%s", fd.detail, fd.cause.Error())
 	}
 	if fd.detail != "" {
-		return fmt.Sprintf("%v", fd.detail)
+		return fmt.Sprintf("%s", fd.detail)
 	}
 	if fd.cause != nil {
-		return fmt.Sprintf("%v", fd.cause.Error())
+		return fmt.Sprintf("%s", fd.cause.Error())
 	}
 	return ""
 }
