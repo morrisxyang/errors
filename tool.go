@@ -8,18 +8,14 @@ import (
 )
 
 // callers 获取堆栈
-func callers() StackTrace {
+func callers() *StackTrace {
 	// depth 记录的栈深度
 	const depth = 10
 	var pcs [depth]uintptr
 	n := runtime.Callers(3, pcs[:])
-	stack := pcs[0:n]
 	// 转换为 errors.StackTrace
-	st := make([]Frame, len(stack))
-	for i := 0; i < len(st); i++ {
-		st[i] = Frame((stack)[i])
-	}
-	return st
+	stack := runtime.CallersFrames(pcs[0:n])
+	return &StackTrace{stack}
 }
 
 // callerFuncInfo 调用方函数名
