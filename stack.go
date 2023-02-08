@@ -27,11 +27,11 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 			io.WriteString(s, "\nStack Info: ")
 			for {
 				frame, more := st.Frames.Next()
+				fmt.Fprintf(s, "\n%s", frame.Function)
+				fmt.Fprintf(s, "\n\t%s:%d", frame.File, frame.Line)
 				if !more {
 					break
 				}
-				fmt.Fprintf(s, "\n%s", frame.Function)
-				fmt.Fprintf(s, "\n\t%s:%d", frame.File, frame.Line)
 			}
 		default:
 			st.formatSlice(s, verb)
@@ -50,11 +50,11 @@ func (st StackTrace) formatSlice(s fmt.State, verb rune) {
 	io.WriteString(s, "[")
 	for {
 		frame, more := st.Frames.Next()
+		io.WriteString(s, " ")
+		fmt.Fprintf(s, "%s", frame.Function)
 		if !more {
 			break
 		}
-		io.WriteString(s, " ")
-		fmt.Fprintf(s, "%s", frame.Function)
 	}
 	io.WriteString(s, "]")
 }
