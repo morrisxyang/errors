@@ -13,5 +13,8 @@ var defaultCfg = &Config{
 
 // SetCfg 设置配置
 func SetCfg(c *Config) {
+	if c == nil {
+		return
+	}
 	defaultCfg = c
 }

@@ -1,16 +1,43 @@
 package errors
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/smartystreets/goconvey/convey"
 )
 
 func TestSetCfg(t *testing.T) {
-	convey.Convey("test", t, func() {
-		SetCfg(&Config{
-			ErrorConnectionFlag: ":",
-		})
-		convey.So(defaultCfg.ErrorConnectionFlag, convey.ShouldEqual, ":")
-	})
+	tests := []struct {
+		cfg  *Config
+		want *Config
+	}{
+		{
+			nil,
+			defaultCfg,
+		},
+		{
+			&Config{
+				Depth:               100,
+				ErrorConnectionFlag: ":",
+			},
+			&Config{
+				Depth:               100,
+				ErrorConnectionFlag: ":",
+			},
+		},
+		{
+			&Config{
+				Depth: 100,
+			},
+			&Config{
+				Depth: 100,
+			},
+		},
+	}
+	for i, tt := range tests {
+		SetCfg(tt.cfg)
+		got := defaultCfg
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
+		}
+	}
 }
