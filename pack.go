@@ -14,6 +14,16 @@ func New(msg string) error {
 	}
 }
 
+// Errorf formats according to a format specifier and returns the string
+// as a value that satisfies error.
+// Errorf also records the stack trace at the point it was called.
+func Errorf(format string, args ...interface{}) error {
+	return &fundamentalError{
+		msg:   fmt.Sprintf(format, args...),
+		stack: callers(),
+	}
+}
+
 // Newf 使用 format 格式的信息创建一个携带堆栈的错误
 func Newf(format string, args ...interface{}) error {
 	return &fundamentalError{
