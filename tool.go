@@ -20,5 +20,5 @@ func callers() *StackTrace {
 		stack = runtime.CallersFrames(pcs[0:n])
 	}
 
-	return &StackTrace{stack}
+	return &StackTrace{*stack}
 }

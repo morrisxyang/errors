@@ -8,7 +8,7 @@ import (
 
 // StackTrace is stack of Frames from innermost (newest) to outermost (oldest).
 type StackTrace struct {
-	*runtime.Frames
+	runtime.Frames
 }
 
 // Format formats the stack of Frames according to the fmt.Formatter interface.
