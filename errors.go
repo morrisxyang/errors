@@ -75,3 +75,49 @@ func (fd *fundamentalError) Format(s fmt.State, verb rune) {
 		_, _ = fmt.Fprintf(s, "unsupported format: %%!%c, use %%s: %s", verb, fd.Error())
 	}
 }
+
+// StackTrace ...
+func (fd *fundamentalError) StackTrace() StackTrace {
+	f := fd
+	for f != nil {
+		if f.stack != nil {
+			break
+		}
+		f, _ = f.Cause().(*fundamentalError)
+	}
+	return *f.stack
+}
+
+// Cause returns the underlying cause of the error, if possible.
+// An error value has a cause if it implements the following
+// interface:
+//
+//	type causer interface {
+//	       Cause() error
+//	}
+//
+// If the error does not implement Cause, the original error will
+// be returned. If the error is nil, nil will be returned without further
+// investigation.
+func Cause(err error) error {
+	type causer interface {
+		Cause() error
+	}
+
+	if err == nil {
+		return err
+	}
+
+	for {
+		cause, ok := err.(causer)
+		if !ok {
+			break
+		}
+		if cause.Cause() != nil {
+			err = cause.Cause()
+			continue
+		}
+		break
+	}
+	return err
+}
