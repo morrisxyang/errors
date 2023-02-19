@@ -12,7 +12,7 @@ func TestSetCfg(t *testing.T) {
 	}{
 		{
 			nil,
-			defaultCfg,
+			cfg,
 		},
 		{
 			&Config{
@@ -35,7 +35,7 @@ func TestSetCfg(t *testing.T) {
 	}
 	for i, tt := range tests {
 		SetCfg(tt.cfg)
-		got := defaultCfg
+		got := cfg
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
 		}
