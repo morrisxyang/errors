@@ -29,6 +29,13 @@ func SetCfg(c *Config) {
 	cfg = c
 }
 
+// GetCfg 设置配置
+func GetCfg() *Config {
+	rw.RLock()
+	defer rw.RUnlock()
+	return cfg
+}
+
 // ResetCfg 重置配置
 func ResetCfg() {
 	rw.Lock()
