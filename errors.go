@@ -17,7 +17,7 @@ type fundamentalError struct {
 // Error 实现 Error 接口, 打印链路 msg 信息, 包含文件名、行数等
 func (fd *fundamentalError) Error() string {
 	if fd.msg != "" && fd.cause != nil {
-		return fmt.Sprintf("%s"+defaultCfg.ErrorConnectionFlag+"%s", fd.msg, fd.cause.Error())
+		return fmt.Sprintf("%s"+GetCfg().ErrorConnectionFlag+"%s", fd.msg, fd.cause.Error())
 	}
 	if fd.msg != "" {
 		return fmt.Sprintf("%s", fd.msg)
@@ -26,22 +26,6 @@ func (fd *fundamentalError) Error() string {
 		return fmt.Sprintf("%s", fd.cause.Error())
 	}
 	return ""
-}
-
-// Cause 返回内部的错误
-func (fd *fundamentalError) Cause() error { return fd.cause }
-
-// Unwrap 支持Go 1.13+ error chains.
-func (fd *fundamentalError) Unwrap() error { return fd.cause }
-
-// Code 返回 code
-func (fd *fundamentalError) Code() int {
-	return fd.code
-}
-
-// Msg 返回 msg
-func (fd *fundamentalError) Msg() string {
-	return fd.msg
 }
 
 // Format 实现 Format 接口
@@ -59,7 +43,7 @@ func (fd *fundamentalError) Format(s fmt.State, verb rune) {
 				_, _ = io.WriteString(s, fd.msg)
 			}
 			if fd.Cause() != nil {
-				_, _ = fmt.Fprintf(s, defaultCfg.ErrorConnectionFlag+"%+v", fd.Cause())
+				_, _ = fmt.Fprintf(s, GetCfg().ErrorConnectionFlag+"%+v", fd.Cause())
 			}
 			if fd.stack != nil {
 				stackTrace = fd.stack
@@ -88,36 +72,18 @@ func (fd *fundamentalError) StackTrace() StackTrace {
 	return *f.stack
 }
 
-// Cause returns the underlying cause of the error, if possible.
-// An error value has a cause if it implements the following
-// interface:
-//
-//	type causer interface {
-//	       Cause() error
-//	}
-//
-// If the error does not implement Cause, the original error will
-// be returned. If the error is nil, nil will be returned without further
-// investigation.
-func Cause(err error) error {
-	type causer interface {
-		Cause() error
-	}
-
-	if err == nil {
-		return err
-	}
-
-	for {
-		cause, ok := err.(causer)
-		if !ok {
-			break
-		}
-		if cause.Cause() != nil {
-			err = cause.Cause()
-			continue
-		}
-		break
-	}
-	return err
+// Code 返回 code
+func (fd *fundamentalError) Code() int {
+	return fd.code
 }
+
+// Msg 返回 msg
+func (fd *fundamentalError) Msg() string {
+	return fd.msg
+}
+
+// Cause 返回内部的错误
+func (fd *fundamentalError) Cause() error { return fd.cause }
+
+// Unwrap 支持Go 1.13+ error chains.
+func (fd *fundamentalError) Unwrap() error { return fd.cause }
