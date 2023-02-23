@@ -164,3 +164,29 @@ func TestCause(t *testing.T) {
 		}
 	}
 }
+
+// errors.New, etc values are not expected to be compared by value
+// but the change in errors#27 made them incomparable. Assert that
+// various kinds of errors have a functional equality operator, even
+// if the result of that equality is always false.
+func TestErrorEquality(t *testing.T) {
+	vals := []error{
+		nil,
+		io.EOF,
+		errors.New("EOF"),
+		New("EOF"),
+		Errorf("EOF"),
+		Wrap(io.EOF, "EOF"),
+		Wrapf(io.EOF, "EOF%d", 2),
+		Wrap(nil, "whoops"),
+		Wrap(io.EOF, "whoops"),
+		Wrap(io.EOF, ""),
+		Wrap(nil, ""),
+	}
+
+	for i := range vals {
+		for j := range vals {
+			_ = vals[i] == vals[j] // mustn't panic
+		}
+	}
+}
