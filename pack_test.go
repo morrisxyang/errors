@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"testing"
 )
 
@@ -106,6 +107,60 @@ func TestErrorf(t *testing.T) {
 		got := tt.err.Error()
 		if got != tt.want {
 			t.Errorf("Errorf(%v): got: %q, want %q", tt.err, got, tt.want)
+		}
+	}
+}
+
+type nilError struct{}
+
+func (nilError) Error() string { return "nil error" }
+
+func TestCause(t *testing.T) {
+	x := New("error")
+	tests := []struct {
+		err  error
+		want error
+	}{{
+		// nil error is nil
+		err:  nil,
+		want: nil,
+	}, {
+		// explicit nil error is nil
+		err:  (error)(nil),
+		want: nil,
+	}, {
+		// typed nil is nil
+		err:  (*nilError)(nil),
+		want: (*nilError)(nil),
+	}, {
+		// uncaused error is unaffected
+		err:  io.EOF,
+		want: io.EOF,
+	}, {
+		// caused error returns cause
+		err:  Wrap(io.EOF, "ignored"),
+		want: io.EOF,
+	}, {
+		err:  x, // return from errors.New
+		want: x,
+	}, {
+		Wrap(nil, "whoops"),
+		nil,
+	}, {
+		Wrap(io.EOF, "whoops"),
+		io.EOF,
+	}, {
+		Wrap(nil, ""),
+		nil,
+	}, {
+		Wrap(io.EOF, ""),
+		io.EOF,
+	}}
+
+	for i, tt := range tests {
+		got := Cause(tt.err)
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
 		}
 	}
 }
