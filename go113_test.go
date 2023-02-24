@@ -46,11 +46,100 @@ func TestIs(t *testing.T) {
 			},
 			want: true,
 		},
+		{
+			name: "multi wrap",
+			args: args{
+				err:    Wrap(Wrap(Wrap(err, "wrap 1"), "wrap 2"), "wrap 3"),
+				target: err,
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Is(tt.args.err, tt.args.target); got != tt.want {
 				t.Errorf("Is() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestErrorChainCompat(t *testing.T) {
+	err := stderrors.New("error that gets wrapped")
+	wrapped := Wrap(err, "wrapped up")
+	if !stderrors.Is(wrapped, err) {
+		t.Errorf("Wrap does not support Go 1.13 error chains")
+	}
+}
+
+type customErr struct {
+	msg string
+}
+
+func (c customErr) Error() string { return c.msg }
+
+func TestAs(t *testing.T) {
+	var err = customErr{msg: "test message"}
+
+	type args struct {
+		err    error
+		target interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "with stack",
+			args: args{
+				err:    Wrap(err, ""),
+				target: new(customErr),
+			},
+			want: true,
+		},
+		{
+			name: "with message",
+			args: args{
+				err:    Wrap(err, "test"),
+				target: new(customErr),
+			},
+			want: true,
+		},
+		{
+			name: "with message format",
+			args: args{
+				err:    Wrapf(err, "%s", "test"),
+				target: new(customErr),
+			},
+			want: true,
+		},
+		{
+			name: "std errors compatibility",
+			args: args{
+				err:    fmt.Errorf("wrap it: %w", err),
+				target: new(customErr),
+			},
+			want: true,
+		},
+		{
+			name: "multi wrap",
+			args: args{
+				err:    Wrap(Wrap(Wrap(err, "wrap 1"), "wrap 2"), "wrap 3"),
+				target: new(customErr),
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := As(tt.args.err, tt.args.target); got != tt.want {
+				t.Errorf("As() = %v, want %v", got, tt.want)
+			}
+
+			ce := tt.args.target.(*customErr)
+			if !reflect.DeepEqual(err, *ce) {
+				t.Errorf("set target error failed, target error is %v", *ce)
 			}
 		})
 	}
@@ -87,79 +176,6 @@ func TestUnwrap(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := Unwrap(tt.args.err); !reflect.DeepEqual(err, tt.want) {
 				t.Errorf("Unwrap() error = %v, want %v", err, tt.want)
-			}
-		})
-	}
-}
-
-func TestErrorChainCompat(t *testing.T) {
-	err := stderrors.New("error that gets wrapped")
-	wrapped := Wrap(err, "wrapped up")
-	if !stderrors.Is(wrapped, err) {
-		t.Errorf("Wrap does not support Go 1.13 error chains")
-	}
-}
-
-type customErr struct {
-	msg string
-}
-
-func (c customErr) Error() string { return c.msg }
-
-func TestAs(t *testing.T) {
-	var err = customErr{msg: "test message"}
-
-	type args struct {
-		err    error
-		target interface{}
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "with stack",
-			args: args{
-				err:    (err),
-				target: new(customErr),
-			},
-			want: true,
-		},
-		{
-			name: "with message",
-			args: args{
-				err:    Wrap(err, "test"),
-				target: new(customErr),
-			},
-			want: true,
-		},
-		{
-			name: "with message format",
-			args: args{
-				err:    Wrapf(err, "%s", "test"),
-				target: new(customErr),
-			},
-			want: true,
-		},
-		{
-			name: "std errors compatibility",
-			args: args{
-				err:    fmt.Errorf("wrap it: %w", err),
-				target: new(customErr),
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := As(tt.args.err, tt.args.target); got != tt.want {
-				t.Errorf("As() = %v, want %v", got, tt.want)
-			}
-
-			ce := tt.args.target.(*customErr)
-			if !reflect.DeepEqual(err, *ce) {
-				t.Errorf("set target error failed, target error is %v", *ce)
 			}
 		})
 	}
