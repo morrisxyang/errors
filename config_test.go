@@ -3,6 +3,8 @@ package errors
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSetCfg(t *testing.T) {
@@ -40,4 +42,24 @@ func TestSetCfg(t *testing.T) {
 			t.Errorf("test %d: got %#v, want %#v", i+1, got, tt.want)
 		}
 	}
+}
+
+func TestGetCfg(t *testing.T) {
+	expected := defaultCfg
+	// call GetCfg
+	c := GetCfg()
+
+	// check if returned value is the expected one
+	assert.Equal(t, expected, c)
+}
+
+func TestResetCfg(t *testing.T) {
+	SetCfg(&Config{
+		Depth: 100,
+	})
+	assert.NotEqual(t, defaultCfg, cfg)
+
+	ResetCfg()
+	// check if config was reset to default values
+	assert.Equal(t, defaultCfg, cfg)
 }
