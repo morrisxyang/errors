@@ -53,7 +53,7 @@ func TestWrap(t *testing.T) {
 		{Wrap(io.EOF, "read error"), "client error", "client error: read error: EOF"},
 	}
 	SetCfg(&Config{
-		Depth:               0,
+		StackDepth:          0,
 		ErrorConnectionFlag: ": ",
 	})
 	defer ResetCfg()
@@ -78,7 +78,7 @@ func TestWrapf(t *testing.T) {
 			"client error: read error with 1 format specifier: EOF"},
 	}
 	SetCfg(&Config{
-		Depth:               0,
+		StackDepth:          0,
 		ErrorConnectionFlag: ": ",
 	})
 	defer ResetCfg()
@@ -99,7 +99,7 @@ func TestErrorf(t *testing.T) {
 		{Errorf("read error with %d format specifier", 1), "read error with 1 format specifier"},
 	}
 	SetCfg(&Config{
-		Depth:               0,
+		StackDepth:          0,
 		ErrorConnectionFlag: ": ",
 	})
 	defer ResetCfg()

@@ -14,8 +14,8 @@ func callers() *StackTrace {
 
 	var stack *runtime.Frames
 	cfg := GetCfg()
-	if cfg.Depth > 0 && cfg.Depth < n {
-		stack = runtime.CallersFrames(pcs[0:cfg.Depth])
+	if cfg.StackDepth > 0 && cfg.StackDepth < n {
+		stack = runtime.CallersFrames(pcs[0:cfg.StackDepth])
 	} else {
 		// 转换为 errors.StackTrace
 		stack = runtime.CallersFrames(pcs[0:n])

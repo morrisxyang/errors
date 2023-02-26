@@ -18,20 +18,20 @@ func TestSetCfg(t *testing.T) {
 		},
 		{
 			&Config{
-				Depth:               100,
+				StackDepth:          100,
 				ErrorConnectionFlag: ":",
 			},
 			&Config{
-				Depth:               100,
+				StackDepth:          100,
 				ErrorConnectionFlag: ":",
 			},
 		},
 		{
 			&Config{
-				Depth: 100,
+				StackDepth: 100,
 			},
 			&Config{
-				Depth: 100,
+				StackDepth: 100,
 			},
 		},
 	}
@@ -55,7 +55,7 @@ func TestGetCfg(t *testing.T) {
 
 func TestResetCfg(t *testing.T) {
 	SetCfg(&Config{
-		Depth: 100,
+		StackDepth: 100,
 	})
 	assert.NotEqual(t, defaultCfg, cfg)
 
