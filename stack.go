@@ -24,11 +24,12 @@ func (st StackTrace) Format(s fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			io.WriteString(s, "\nStack Info: ")
 			for {
 				frame, more := st.Frames.Next()
-				fmt.Fprintf(s, "\n%s", frame.Function)
-				fmt.Fprintf(s, "\n\t%s:%d", frame.File, frame.Line)
+				if frame.PC > 0 {
+					fmt.Fprintf(s, "\n%s", frame.Function)
+					fmt.Fprintf(s, "\n\t%s:%d", frame.File, frame.Line)
+				}
 				if !more {
 					break
 				}
@@ -50,11 +51,11 @@ func (st StackTrace) formatSlice(s fmt.State, verb rune) {
 	io.WriteString(s, "[")
 	for {
 		frame, more := st.Frames.Next()
-		io.WriteString(s, " ")
 		fmt.Fprintf(s, "%s", frame.Function)
 		if !more {
 			break
 		}
+		io.WriteString(s, " ")
 	}
 	io.WriteString(s, "]")
 }

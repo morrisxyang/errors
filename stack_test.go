@@ -3,20 +3,9 @@ package errors
 import (
 	"fmt"
 	"regexp"
-	"strings"
+	"runtime"
 	"testing"
 )
-
-// var initpc = caller()
-
-// a version of runtime.Caller that returns a Frame, not a uintptr.
-// func caller() Frame {
-// 	var pcs [3]uintptr
-// 	n := runtime.Callers(2, pcs[:])
-// 	frames := runtime.CallersFrames(pcs[:n])
-// 	frame, _ := frames.Next()
-// 	return Frame(frame.PC)
-// }
 
 func TestStackTrace(t *testing.T) {
 	tests := []struct {
@@ -26,24 +15,24 @@ func TestStackTrace(t *testing.T) {
 		{
 			New("ooh"),
 			"github.com/morrisxyang/errors.TestStackTrace" +
-				"\n\t.+errors/stack_test.go:27",
+				"\n\t.+errors/stack_test.go:16",
 		},
 		{
 			Wrap(New("ooh"), "ahh"),
 			"github.com/morrisxyang/errors.TestStackTrace" +
-				"\n\t.+errors/stack_test.go:32", // this is the stack of Wrap, not New
+				"\n\t.+errors/stack_test.go:21", // this is the stack of Wrap, not New
 		},
 		{
 			Cause(Wrap(New("ooh"), "ahh")),
 			"github.com/morrisxyang/errors.TestStackTrace" +
-				"\n\t.+errors/stack_test.go:37", // this is the stack of New
+				"\n\t.+errors/stack_test.go:26", // this is the stack of New
 		},
 		{
 			func() error { return New("ooh") }(),
 			`github.com/morrisxyang/errors.TestStackTrace.func1` +
-				"\n\t.+errors/stack_test.go:42" + "\n" + // this is the stack of New
+				"\n\t.+errors/stack_test.go:31" + "\n" + // this is the stack of New
 				"github.com/morrisxyang/errors.TestStackTrace" +
-				"\n\t.+errors/stack_test.go:42", // this is the stack of New's caller
+				"\n\t.+errors/stack_test.go:31", // this is the stack of New's caller
 		},
 		{
 			Cause(func() error {
@@ -52,11 +41,11 @@ func TestStackTrace(t *testing.T) {
 				}()
 			}()),
 			`github.com/morrisxyang/errors.TestStackTrace.func2.1` +
-				"\n\t.+errors/stack_test.go:51" + "\n" + // this is the stack of Errorf
+				"\n\t.+errors/stack_test.go:40" + "\n" + // this is the stack of Errorf
 				`github.com/morrisxyang/errors.TestStackTrace.func2` +
-				"\n\t.+errors/stack_test.go:52" + "\n" + // this is the stack of Errorf's caller
+				"\n\t.+errors/stack_test.go:41" + "\n" + // this is the stack of Errorf's caller
 				"github.com/morrisxyang/errors.TestStackTrace" +
-				"\n\t.+errors/stack_test.go:53", // this is the stack of Errorf's caller's caller
+				"\n\t.+errors/stack_test.go:42", // this is the stack of Errorf's caller's caller
 		},
 	}
 	for i, tt := range tests {
@@ -73,25 +62,103 @@ func TestStackTrace(t *testing.T) {
 	}
 }
 
+var initCallers = func() *StackTrace {
+	// maxDepth 记录的栈深度
+	const maxDepth = 64
+	var pcs [maxDepth]uintptr
+	n := runtime.Callers(2, pcs[:])
+
+	var stack *runtime.Frames
+	cfg := GetCfg()
+	if cfg.StackDepth > 0 && cfg.StackDepth < n {
+		stack = runtime.CallersFrames(pcs[0:cfg.StackDepth])
+	} else {
+		// 转换为 errors.StackTrace
+		stack = runtime.CallersFrames(pcs[0:n])
+	}
+
+	return &StackTrace{*stack}
+}()
+
+func TestStackTraceFormat(t *testing.T) {
+	tests := []struct {
+		*StackTrace
+		format string
+		want   string
+	}{
+		{
+			&StackTrace{},
+			"%s",
+			`\[\]`,
+		},
+		{
+			&StackTrace{},
+			"%q",
+			`unsupported format: %!q, use %s: \[\]`,
+		},
+		{
+			&StackTrace{},
+			"%v",
+			`\[\]`,
+		},
+		{
+			&StackTrace{},
+			"%+v",
+			"",
+		},
+		{
+			&StackTrace{},
+			"%#v",
+			`\[\]`,
+		},
+		{
+			initCallers,
+			"%s",
+			`\[github.com/morrisxyang/errors.init runtime.doInit runtime.doInit runtime.main runtime.goexit\]`,
+		},
+		{
+			initCallers,
+			"%q",
+			`unsupported format: %!q, use %s: \[github.com/morrisxyang/errors.init runtime.doInit runtime.doInit ` +
+				`runtime.main runtime.goexit\]`,
+		},
+		{
+			initCallers,
+			"%v",
+			`\[github.com/morrisxyang/errors.init runtime.doInit runtime.doInit runtime.main runtime.goexit\]`,
+		},
+		{
+			initCallers,
+			"%+v",
+			`\ngithub.com/morrisxyang/errors.init\n\t.+errors/stack_test.go:81\nruntime.doInit\n\t.*`,
+		},
+		{
+			initCallers,
+			"%#v",
+			`\[github.com/morrisxyang/errors.init runtime.doInit runtime.doInit runtime.main runtime.goexit\]`,
+		},
+		{
+			(*StackTrace)(nil),
+			"%v",
+			`<nil>`,
+		},
+	}
+
+	for i, tt := range tests {
+		testFormatRegexp(t, i, tt.StackTrace, tt.format, tt.want)
+	}
+}
+
 func testFormatRegexp(t *testing.T, n int, arg interface{}, format, want string) {
 	t.Helper()
 	got := fmt.Sprintf(format, arg)
-	gotLines := strings.SplitN(got, "\n", -1)
-	gotLines = gotLines[2:]
-	wantLines := strings.SplitN(want, "\n", -1)
 
-	if len(wantLines) > len(gotLines) {
-		t.Errorf("test %d: wantLines(%d) > gotLines(%d):\n got: %q\nwant: %q", n+1, len(wantLines), len(gotLines), got, want)
-		return
+	match, err := regexp.MatchString(want, got)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	for i, w := range wantLines {
-		match, err := regexp.MatchString(w, gotLines[i])
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !match {
-			t.Errorf("test %d: line %d: fmt.Sprintf(%q, err):\n got: %q\nwant: %q", n+1, i+1, format, got, want)
-		}
+	if !match {
+		t.Errorf("failed test %d: fmt.Sprintf(%q, err):\n got: %q\nwant: %q", n+1, format, got, want)
 	}
+	t.Logf("success test %d: fmt.Sprintf(%q, err):\n got: %q\nwant: %q", n+1, format, got, want)
 }
