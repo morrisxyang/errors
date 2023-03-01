@@ -8,7 +8,7 @@ import (
 
 // New 使用传入的信息创建一个携带堆栈的错误
 func New(msg string) error {
-	return &fundamentalError{
+	return &baseError{
 		msg:   msg,
 		stack: callers(),
 	}
@@ -18,7 +18,7 @@ func New(msg string) error {
 // as a value that satisfies error.
 // Errorf also records the stack trace at the point it was called.
 func Errorf(format string, args ...interface{}) error {
-	return &fundamentalError{
+	return &baseError{
 		msg:   fmt.Sprintf(format, args...),
 		stack: callers(),
 	}
@@ -26,7 +26,7 @@ func Errorf(format string, args ...interface{}) error {
 
 // Newf 使用 format 格式的信息创建一个携带堆栈的错误
 func Newf(format string, args ...interface{}) error {
-	return &fundamentalError{
+	return &baseError{
 		msg:   fmt.Sprintf(format, args...),
 		stack: callers(),
 	}
@@ -34,7 +34,7 @@ func Newf(format string, args ...interface{}) error {
 
 // NewWithCode 使用传入的信息创建一个携带堆栈的错误
 func NewWithCode(code int, msg string) error {
-	return &fundamentalError{
+	return &baseError{
 		msg:   msg,
 		stack: callers(),
 		code:  code,
@@ -43,7 +43,7 @@ func NewWithCode(code int, msg string) error {
 
 // NewWithCodef 使用 format 格式的信息创建一个携带堆栈的错误
 func NewWithCodef(code int, format string, args ...interface{}) error {
-	return &fundamentalError{
+	return &baseError{
 		msg:   fmt.Sprintf(format, args...),
 		stack: callers(),
 		code:  code,
@@ -58,11 +58,11 @@ func Wrap(err error, msg string) error {
 	if err == nil {
 		return nil
 	}
-	wrapErr := &fundamentalError{
+	wrapErr := &baseError{
 		cause: err,
 		msg:   msg,
 	}
-	var fd *fundamentalError
+	var fd *baseError
 	if stderrors.As(err, &fd) {
 		// 链路上有同类型错误的时候，延用 code
 		wrapErr.code = fd.code
@@ -81,11 +81,11 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
 	}
-	wrapErr := &fundamentalError{
+	wrapErr := &baseError{
 		cause: err,
 		msg:   fmt.Sprintf(format, args...),
 	}
-	var fd *fundamentalError
+	var fd *baseError
 	if stderrors.As(err, &fd) {
 		// 链路上有同类型错误的时候，延用 code
 		wrapErr.code = fd.code
@@ -104,12 +104,12 @@ func WrapWithCode(err error, code int, msg string) error {
 	if err == nil {
 		return nil
 	}
-	wrapErr := &fundamentalError{
+	wrapErr := &baseError{
 		cause: err,
 		msg:   msg,
 		code:  code,
 	}
-	var fd *fundamentalError
+	var fd *baseError
 	if !stderrors.As(err, &fd) {
 		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
 		wrapErr.stack = callers()
@@ -125,12 +125,12 @@ func WrapWithCodef(err error, code int, format string, args ...interface{}) erro
 	if err == nil {
 		return nil
 	}
-	wrapErr := &fundamentalError{
+	wrapErr := &baseError{
 		cause: err,
 		msg:   fmt.Sprintf(format, args...),
 		code:  code,
 	}
-	var fd *fundamentalError
+	var fd *baseError
 	if !stderrors.As(err, &fd) {
 		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
 		wrapErr.stack = callers()
@@ -145,7 +145,7 @@ func Code(e error) int {
 	}
 	// int32最小值
 	const unknownCode = math.MinInt32
-	err, ok := e.(*fundamentalError)
+	err, ok := e.(*baseError)
 	if !ok {
 		return unknownCode
 	}
@@ -158,7 +158,7 @@ func Msg(e error) string {
 		return ""
 	}
 	const unknownMsg = "unknown error"
-	err, ok := e.(*fundamentalError)
+	err, ok := e.(*baseError)
 	if !ok {
 		return unknownMsg
 	}
