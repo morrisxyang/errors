@@ -2,40 +2,41 @@
 package errors
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 )
 
 // baseError defines an error that includes a stack trace.
 type baseError struct {
-	cause error       // cause 内部嵌套错误, 构造错误链
-	code  int         // code 错误码
-	msg   string      // msg 错误描述
-	stack *StackTrace // stack 错误堆栈, 如果错误链已有堆栈, 则不再设置
+	cause error       // cause is the nested error, building an error chain
+	code  int         // code is the error code
+	msg   string      // msg is the error description
+	stack *StackTrace // stack is the error stack, if the error chain already has a stack, it will not be set again
 }
 
-// Error 实现 Error 接口, 打印错误链路信息
+// Error implements the Error interface to print the error chain information.
 func (b *baseError) Error() string {
-	if b.msg != "" && b.cause != nil {
-		if b.code != 0 {
-			return fmt.Sprintf("%d, %s"+GetCfg().ErrorConnectionFlag+"%s",
-				b.code, b.msg, b.cause.Error())
-		}
-		return fmt.Sprintf("%s"+GetCfg().ErrorConnectionFlag+"%s", b.msg, b.cause.Error())
+	var buffer bytes.Buffer
+	if b.code != 0 {
+		buffer.WriteString(fmt.Sprintf("%d", b.code))
 	}
 	if b.msg != "" {
-		if b.code != 0 {
-			return fmt.Sprintf("%d, %s", b.code, b.msg)
+		if buffer.Len() > 0 {
+			buffer.WriteString(", ")
 		}
-		return fmt.Sprintf("%s", b.msg)
+		buffer.WriteString(b.msg)
 	}
 	if b.cause != nil {
-		return fmt.Sprintf("%s", b.cause.Error())
+		if buffer.Len() > 0 {
+			buffer.WriteString(GetCfg().ErrorConnectionFlag)
+		}
+		buffer.WriteString(b.Cause().Error())
 	}
-	return ""
+	return buffer.String()
 }
 
-// Format 实现 Format 接口
+// Format implements the Format interface for printing.
 func (b *baseError) Format(s fmt.State, verb rune) {
 	var stackTrace *StackTrace
 	defer func() {
@@ -67,30 +68,31 @@ func (b *baseError) Format(s fmt.State, verb rune) {
 	}
 }
 
-// StackTrace ...
+// StackTrace returns the error chain stack trace.
+// The deepest error created will carry the stack information and shallow errors will not repeat the record.
 func (b *baseError) StackTrace() StackTrace {
-	f := b
-	for f != nil {
-		if f.stack != nil {
+	e := b
+	for e != nil {
+		if e.stack != nil {
 			break
 		}
-		f, _ = f.Cause().(*baseError)
+		e, _ = e.Cause().(*baseError)
 	}
-	return *f.stack
+	return *e.stack
 }
 
-// Code 返回 code
+// Code returns the code.
 func (b *baseError) Code() int {
 	return b.code
 }
 
-// Msg 返回 msg
+// Msg returns the message.
 func (b *baseError) Msg() string {
 	return b.msg
 }
 
-// Cause 返回内部的错误
+// Cause returns the nested error.
 func (b *baseError) Cause() error { return b.cause }
 
-// Unwrap 支持Go 1.13+ error chains.
+// Unwrap supports Go 1.13+ error chains.
 func (b *baseError) Unwrap() error { return b.cause }
