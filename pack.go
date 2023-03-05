@@ -63,10 +63,7 @@ func Wrap(err error, msg string) error {
 		msg:   msg,
 	}
 	var fd *baseError
-	if stderrors.As(err, &fd) {
-		// 链路上有同类型错误的时候，延用 code
-		wrapErr.code = fd.code
-	} else {
+	if !stderrors.As(err, &fd) {
 		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
 		wrapErr.stack = callers()
 	}
@@ -86,10 +83,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		msg:   fmt.Sprintf(format, args...),
 	}
 	var fd *baseError
-	if stderrors.As(err, &fd) {
-		// 链路上有同类型错误的时候，延用 code
-		wrapErr.code = fd.code
-	} else {
+	if !stderrors.As(err, &fd) {
 		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
 		wrapErr.stack = callers()
 	}

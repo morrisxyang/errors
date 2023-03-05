@@ -46,6 +46,7 @@ func TestSetCfg(t *testing.T) {
 
 func TestGetCfg(t *testing.T) {
 	expected := defaultCfg
+	ResetCfg()
 	// call GetCfg
 	c := GetCfg()
 

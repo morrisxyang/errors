@@ -44,15 +44,27 @@ func (b *baseError) Format(s fmt.State, verb rune) {
 			stackTrace.Format(s, verb)
 		}
 	}()
+
+	var buffer bytes.Buffer
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
+			if b.code != 0 {
+				buffer.WriteString(fmt.Sprintf("%d", b.code))
+			}
 			if b.msg != "" {
-				_, _ = io.WriteString(s, b.msg)
+				if buffer.Len() > 0 {
+					buffer.WriteString(", ")
+				}
+				buffer.WriteString(b.msg)
 			}
-			if b.Cause() != nil {
-				_, _ = fmt.Fprintf(s, GetCfg().ErrorConnectionFlag+"%+v", b.Cause())
+			if b.cause != nil {
+				if buffer.Len() > 0 {
+					buffer.WriteString(GetCfg().ErrorConnectionFlag)
+				}
+				buffer.WriteString(fmt.Sprintf("%+v", b.Cause()))
 			}
+			_, _ = io.WriteString(s, buffer.String())
 			if b.stack != nil {
 				stackTrace = b.stack
 			}
