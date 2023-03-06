@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"reflect"
 	"testing"
 )
@@ -16,6 +17,8 @@ func TestNew(t *testing.T) {
 		{"", fmt.Errorf("")},
 		{"foo", fmt.Errorf("foo")},
 		{"foo", New("foo")},
+		{"foo", Newf("%s", "foo")},
+		{"foo", Errorf("foo")},
 		{"string with format specifiers: %v", errors.New("string with format specifiers: %v")},
 	}
 
@@ -188,5 +191,49 @@ func TestErrorEquality(t *testing.T) {
 		for j := range vals {
 			_ = vals[i] == vals[j] // mustn't panic
 		}
+	}
+}
+
+func TestCode(t *testing.T) {
+	// Test when error is nil
+	code := Code(nil)
+	if code != 0 {
+		t.Errorf("Expected Code(nil) to return 0, but got %d", code)
+	}
+
+	// Test when error is not of type *baseError
+	err := errors.New("some error")
+	code = Code(err)
+	if code != math.MinInt32 {
+		t.Errorf("Expected Code(%v) to return %d, but got %d", err, math.MinInt32, code)
+	}
+
+	// Test when error is of type *baseError
+	baseErr := &baseError{code: 123, msg: "some error"}
+	code = Code(baseErr)
+	if code != baseErr.code {
+		t.Errorf("Expected Code(%v) to return %d, but got %d", baseErr, baseErr.code, code)
+	}
+}
+
+func TestMsg(t *testing.T) {
+	// Test when error is nil
+	msg := Msg(nil)
+	if msg != "" {
+		t.Errorf("Expected Msg(nil) to return empty string, but got %s", msg)
+	}
+
+	// Test when error is not of type *baseError
+	err := errors.New("some error")
+	msg = Msg(err)
+	if msg != "unknown error" {
+		t.Errorf("Expected Msg(%v) to return 'unknown error', but got %s", err, msg)
+	}
+
+	// Test when error is of type *baseError
+	baseErr := &baseError{code: 123, msg: "some error"}
+	msg = Msg(baseErr)
+	if msg != baseErr.msg {
+		t.Errorf("Expected Msg(%v) to return '%s', but got '%s'", baseErr, baseErr.msg, msg)
 	}
 }
