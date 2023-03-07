@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-// New 使用传入的信息创建一个携带堆栈的错误
+// New creates an error with a stack trace using the provided message
 func New(msg string) error {
 	return &baseError{
 		msg:   msg,
@@ -24,7 +24,8 @@ func Errorf(format string, args ...interface{}) error {
 	}
 }
 
-// Newf 使用 format 格式的信息创建一个携带堆栈的错误
+// Newf creates a new error with the provided format specifier and arguments.
+// It has the same functionality as New function
 func Newf(format string, args ...interface{}) error {
 	return &baseError{
 		msg:   fmt.Sprintf(format, args...),
@@ -32,7 +33,7 @@ func Newf(format string, args ...interface{}) error {
 	}
 }
 
-// NewWithCode 使用传入的信息创建一个携带堆栈的错误
+// NewWithCode creates a new error with a stack trace, using the provided code and message.
 func NewWithCode(code int, msg string) error {
 	return &baseError{
 		msg:   msg,
@@ -41,7 +42,8 @@ func NewWithCode(code int, msg string) error {
 	}
 }
 
-// NewWithCodef 使用 format 格式的信息创建一个携带堆栈的错误
+// NewWithCodef creates a new error with a stack trace, the provided code, format specifier and arguments.
+// This function has the same functionality as the NewWithCode function.
 func NewWithCodef(code int, format string, args ...interface{}) error {
 	return &baseError{
 		msg:   fmt.Sprintf(format, args...),
@@ -50,11 +52,11 @@ func NewWithCodef(code int, format string, args ...interface{}) error {
 	}
 }
 
-// Wrap 使用传入的信息包装错误, 携带堆栈信息
-// 如果传入的 err 已经有错误码, 直接延用
-// 如果传入的 err 已经有堆栈, 不再设置堆栈
-// 如果传入的 err 为 nil, Wrap 将返回 nil
+// Wrap function wraps the incoming error with stack information and message.
+// If the incoming err already has a stack, the stack will not be set again.
+// If the incoming err is nil, Wrap will return nil.
 func Wrap(err error, msg string) error {
+	// check if err is nil
 	if err == nil {
 		return nil
 	}
@@ -64,16 +66,14 @@ func Wrap(err error, msg string) error {
 	}
 	var fd *baseError
 	if !stderrors.As(err, &fd) {
-		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
 	return wrapErr
 }
 
-// Wrapf 使用 format 格式的信息包装错误, 携带堆栈信息
-// 如果传入的 err 已经有错误码, 直接延用
-// 如果传入的 err 已经有堆栈, 不再设置堆栈
-// 如果传入的 err 为 nil, Wrapf 将返回 nil
+// Wrapf function wraps the incoming error with stack information, format specifier and arguments.
+// This function has the same functionality as the Wrap function.
 func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -84,16 +84,15 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 	var fd *baseError
 	if !stderrors.As(err, &fd) {
-		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
 	return wrapErr
 }
 
-// WrapWithCode 使用传入的信息包装错误, 携带堆栈信息
-// 即使传入的 err 已经有错误码, 不会延用, 而是使用传入的 code
-// 如果传入的 err 已经有堆栈, 不再设置堆栈
-// 如果传入的 err 为 nil, WrapWithCode 将返回 nil
+// WrapWithCode function wraps the incoming error with stack information, code and message.
+// If the incoming err already has a stack, the stack will not be set again.
+// If the incoming err is nil, WrapWithCode will return nil.
 func WrapWithCode(err error, code int, msg string) error {
 	if err == nil {
 		return nil
@@ -105,16 +104,14 @@ func WrapWithCode(err error, code int, msg string) error {
 	}
 	var fd *baseError
 	if !stderrors.As(err, &fd) {
-		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
 	return wrapErr
 }
 
-// WrapWithCodef 使用 format 格式的信息包装错误, 携带堆栈信息
-// 即使传入的 err 已经有错误码, 不会延用, 而是使用传入的 code
-// 如果传入的 err 已经有堆栈, 不再设置堆栈
-// 如果传入的 err 为 nil, WrapWithCodef 将返回 nil
+// WrapWithCodef function wraps the incoming error with stack information, code, format specifier and arguments.
+// This function has the same functionality as the WrapWithCode function.
 func WrapWithCodef(err error, code int, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -126,19 +123,19 @@ func WrapWithCodef(err error, code int, format string, args ...interface{}) erro
 	}
 	var fd *baseError
 	if !stderrors.As(err, &fd) {
-		// 链路上没有同类型错误的时候，证明是首次包装, 添加上堆栈信息
+		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
 	return wrapErr
 }
 
-// Code 获取 code
+// Code function returns the error code associated with an error object if it is of type *baseError.
+// If the error object is not of type *baseError, it returns the minimum value of int32.
 func Code(e error) int {
 	if e == nil {
 		return 0
 	}
-	// int32最小值
-	const unknownCode = math.MinInt32
+	const unknownCode = math.MinInt32 // minimum value of int32
 	err, ok := e.(*baseError)
 	if !ok {
 		return unknownCode
@@ -146,7 +143,8 @@ func Code(e error) int {
 	return err.Code()
 }
 
-// Msg 获取 msg
+// Msg function returns the error message associated with an error object if it is of type *baseError.
+// If the error object is not of type *baseError, it returns "unknown error".
 func Msg(e error) string {
 	if e == nil {
 		return ""

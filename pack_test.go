@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -27,6 +28,35 @@ func TestNew(t *testing.T) {
 		if got.Error() != tt.want.Error() {
 			t.Errorf("New.Error(): got: %q, want %q", got, tt.want)
 		}
+	}
+}
+
+func TestNewWithCodef(t *testing.T) {
+	code := 123
+	format := "This is a test. Code: %d"
+	expectedMsg := fmt.Sprintf(format, code)
+
+	// Test with no arguments
+	err := NewWithCodef(code, format, code)
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Errorf("Expected error message to contain '%s', but got '%s'", expectedMsg, err.Error())
+	}
+
+	// Test with arguments
+	arg1 := "foo"
+	arg2 := 42
+	format = "This is a test. Arg1: %s, Arg2: %d, Code: %d"
+	expectedMsg = fmt.Sprintf(format, arg1, arg2, code)
+	err = NewWithCodef(code, format, arg1, arg2, code)
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Errorf("Expected error message to contain '%s', but got '%s'", expectedMsg, err.Error())
+	}
+
+	// Test with invalid format string
+	format = "%d %s" // Missing arguments for format string
+	err = NewWithCodef(code, format)
+	if !strings.Contains(err.Error(), "%!d(MISSING) %!s(MISSING)") {
+		t.Errorf("Expected error message to contain 'missing argument for format specifier', but got '%s'", err.Error())
 	}
 }
 
@@ -90,6 +120,41 @@ func TestWrapf(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("Wrapf(%v, %q): got: %v, want %v", tt.err, tt.message, got, tt.want)
 		}
+	}
+}
+
+func TestWrapWithCodef(t *testing.T) {
+	code := 123
+	format := "This is a test. Code: %d"
+	expectedMsg := fmt.Sprintf(format, code)
+
+	// Test with no arguments
+	err := errors.New("original error")
+	wrappedErr := WrapWithCodef(err, code, format, code)
+	if wrappedErr == nil {
+		t.Error("Expected WrapWithCodef to return non-nil error, but got nil")
+	}
+	if !strings.Contains(wrappedErr.Error(), expectedMsg) {
+		t.Errorf("Expected error message to contain '%s', but got '%s'", expectedMsg, wrappedErr.Error())
+	}
+	if errors.Unwrap(wrappedErr) != err {
+		t.Error("Expected wrapped error to have original error as cause, but got different error")
+	}
+
+	// Test with arguments
+	arg1 := "foo"
+	arg2 := 42
+	format = "This is a test. Arg1: %s, Arg2: %d, Code: %d"
+	expectedMsg = fmt.Sprintf(format, arg1, arg2, code)
+	wrappedErr = WrapWithCodef(err, code, format, arg1, arg2, code)
+	if !strings.Contains(wrappedErr.Error(), expectedMsg) {
+		t.Errorf("Expected error message to contain '%s', but got '%s'", expectedMsg, wrappedErr.Error())
+	}
+
+	// Test with nil error
+	wrappedErr = WrapWithCodef(nil, code, format)
+	if wrappedErr != nil {
+		t.Error("Expected WrapWithCodef to return nil error when given nil error, but got non-nil error")
 	}
 }
 
