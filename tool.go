@@ -5,19 +5,20 @@ import (
 	"runtime"
 )
 
-// callers 获取堆栈
+// callers function retrieves the stack trace of the current goroutine.
 func callers() *StackTrace {
-	// maxDepth 记录的栈深度
+	// constant to limit the depth of the stack trace
 	const maxDepth = 64
 	var pcs [maxDepth]uintptr
 	n := runtime.Callers(3, pcs[:])
 
-	var stack *runtime.Frames
 	cfg := GetCfg()
+	var stack *runtime.Frames
+	// if StackDepth is set and less than total number of frames then limit stack trace depth
 	if cfg.StackDepth > 0 && cfg.StackDepth < n {
 		stack = runtime.CallersFrames(pcs[0:cfg.StackDepth])
 	} else {
-		// 转换为 errors.StackTrace
+		// otherwise, return all frames
 		stack = runtime.CallersFrames(pcs[0:n])
 	}
 
