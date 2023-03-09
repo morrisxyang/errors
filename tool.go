@@ -1,4 +1,3 @@
-// Package errors 封装了携带堆栈的统一错误.
 package errors
 
 import (
