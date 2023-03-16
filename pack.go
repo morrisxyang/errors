@@ -6,6 +6,13 @@ import (
 	"math"
 )
 
+const (
+	// UnknownCode is the error code for unspecified errors.
+	UnknownCode = math.MinInt32
+	// Success is the success prompt string.
+	Success = "success"
+)
+
 // New creates an error with a stack trace using the provided message
 func New(msg string) error {
 	return &baseError{
@@ -55,17 +62,17 @@ func NewWithCodef(code int, format string, args ...interface{}) error {
 // Wrap function wraps the incoming error with stack information and message.
 // If the incoming err already has a stack, the stack will not be set again.
 // If the incoming err is nil, Wrap will return nil.
-func Wrap(err error, msg string) error {
-	// check if err is nil
-	if err == nil {
+func Wrap(e error, msg string) error {
+	// check if e is nil
+	if e == nil {
 		return nil
 	}
 	wrapErr := &baseError{
-		cause: err,
+		cause: e,
 		msg:   msg,
 	}
 	var fd *baseError
-	if !stderrors.As(err, &fd) {
+	if !stderrors.As(e, &fd) {
 		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
@@ -74,16 +81,16 @@ func Wrap(err error, msg string) error {
 
 // Wrapf function wraps the incoming error with stack information, format specifier and arguments.
 // This function has the same functionality as the Wrap function.
-func Wrapf(err error, format string, args ...interface{}) error {
-	if err == nil {
+func Wrapf(e error, format string, args ...interface{}) error {
+	if e == nil {
 		return nil
 	}
 	wrapErr := &baseError{
-		cause: err,
+		cause: e,
 		msg:   fmt.Sprintf(format, args...),
 	}
 	var fd *baseError
-	if !stderrors.As(err, &fd) {
+	if !stderrors.As(e, &fd) {
 		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
@@ -93,17 +100,17 @@ func Wrapf(err error, format string, args ...interface{}) error {
 // WrapWithCode function wraps the incoming error with stack information, code and message.
 // If the incoming err already has a stack, the stack will not be set again.
 // If the incoming err is nil, WrapWithCode will return nil.
-func WrapWithCode(err error, code int, msg string) error {
-	if err == nil {
+func WrapWithCode(e error, code int, msg string) error {
+	if e == nil {
 		return nil
 	}
 	wrapErr := &baseError{
-		cause: err,
+		cause: e,
 		msg:   msg,
 		code:  code,
 	}
 	var fd *baseError
-	if !stderrors.As(err, &fd) {
+	if !stderrors.As(e, &fd) {
 		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
@@ -112,17 +119,17 @@ func WrapWithCode(err error, code int, msg string) error {
 
 // WrapWithCodef function wraps the incoming error with stack information, code, format specifier and arguments.
 // This function has the same functionality as the WrapWithCode function.
-func WrapWithCodef(err error, code int, format string, args ...interface{}) error {
-	if err == nil {
+func WrapWithCodef(e error, code int, format string, args ...interface{}) error {
+	if e == nil {
 		return nil
 	}
 	wrapErr := &baseError{
-		cause: err,
+		cause: e,
 		msg:   fmt.Sprintf(format, args...),
 		code:  code,
 	}
 	var fd *baseError
-	if !stderrors.As(err, &fd) {
+	if !stderrors.As(e, &fd) {
 		// If there is no error of the same type on the link, it means that it is the first time to package and add stack information
 		wrapErr.stack = callers()
 	}
@@ -135,10 +142,12 @@ func Code(e error) int {
 	if e == nil {
 		return 0
 	}
-	const unknownCode = math.MinInt32 // minimum value of int32
 	err, ok := e.(*baseError)
 	if !ok {
-		return unknownCode
+		return UnknownCode
+	}
+	if err == (*baseError)(nil) {
+		return 0
 	}
 	return err.Code()
 }
@@ -149,10 +158,12 @@ func Msg(e error) string {
 	if e == nil {
 		return ""
 	}
-	const unknownMsg = "unknown error"
 	err, ok := e.(*baseError)
 	if !ok {
-		return unknownMsg
+		return e.Error()
+	}
+	if err == (*baseError)(nil) {
+		return Success
 	}
 	return err.Msg()
 }
@@ -168,25 +179,23 @@ func Msg(e error) string {
 // If the error does not implement Cause, the original error will
 // be returned. If the error is nil, nil will be returned without further
 // investigation.
-func Cause(err error) error {
+func Cause(e error) error {
+	if e == nil {
+		return e
+	}
 	type causer interface {
 		Cause() error
 	}
-
-	if err == nil {
-		return err
-	}
-
 	for {
-		cause, ok := err.(causer)
+		cause, ok := e.(causer)
 		if !ok {
 			break
 		}
 		if cause.Cause() != nil {
-			err = cause.Cause()
+			e = cause.Cause()
 			continue
 		}
 		break
 	}
-	return err
+	return e
 }

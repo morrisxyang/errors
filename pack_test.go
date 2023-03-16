@@ -266,6 +266,12 @@ func TestCode(t *testing.T) {
 		t.Errorf("Expected Code(nil) to return 0, but got %d", code)
 	}
 
+	// Test when error is (*baseError)(nil)
+	code = Code((*baseError)(nil))
+	if code != 0 {
+		t.Errorf("Expected Code(nil) to return 0, but got %d", code)
+	}
+
 	// Test when error is not of type *baseError
 	err := errors.New("some error")
 	code = Code(err)
@@ -288,11 +294,17 @@ func TestMsg(t *testing.T) {
 		t.Errorf("Expected Msg(nil) to return empty string, but got %s", msg)
 	}
 
+	// Test when error is (*baseError)(nil)
+	msg = Msg((*baseError)(nil))
+	if msg != Success {
+		t.Errorf("Expected Msg(nil) to return empty string, but got %s", msg)
+	}
+
 	// Test when error is not of type *baseError
 	err := errors.New("some error")
 	msg = Msg(err)
-	if msg != "unknown error" {
-		t.Errorf("Expected Msg(%v) to return 'unknown error', but got %s", err, msg)
+	if msg != "some error" {
+		t.Errorf("Expected Msg(%v) to return 'some error', but got %s", err, msg)
 	}
 
 	// Test when error is of type *baseError
