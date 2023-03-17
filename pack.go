@@ -153,7 +153,7 @@ func Code(e error) int {
 }
 
 // Msg function returns the error message associated with an error object if it is of type *baseError.
-// If the error object is not of type *baseError, it returns "unknown error".
+// If the error object is not of type *baseError, it returns it's Error().
 func Msg(e error) string {
 	if e == nil {
 		return ""
@@ -198,4 +198,42 @@ func Cause(e error) error {
 		break
 	}
 	return e
+}
+
+// EffectiveCode returns the first valid error code from the error chain.
+// If error object encountered is not of type *baseError, it will return UnknownCode.
+func EffectiveCode(e error) int {
+	if e == nil {
+		return 0
+	}
+	type (
+		causer interface {
+			Cause() error
+		}
+	)
+	for {
+		err, ok := e.(*baseError)
+		if !ok {
+			break
+		}
+		if err == (*baseError)(nil) {
+			return 0
+		}
+		// effective
+		if err.Code() != 0 {
+			return err.Code()
+		}
+		// through chain
+		cause, ok := e.(causer)
+		if !ok {
+			break
+		}
+		if cause.Cause() != nil {
+			e = cause.Cause()
+			continue
+		}
+		break
+	}
+	// If no effective code was found, return UnknownCode.
+	return UnknownCode
 }
