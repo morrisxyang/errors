@@ -314,3 +314,30 @@ func TestMsg(t *testing.T) {
 		t.Errorf("Expected Msg(%v) to return '%s', but got '%s'", baseErr, baseErr.msg, msg)
 	}
 }
+
+func TestEffectiveCode(t *testing.T) {
+	type test struct {
+		name     string
+		err      error
+		expected int
+	}
+
+	// Define a list of test cases
+	tests := []test{
+		{name: "Nil", err: nil, expected: 0},
+		{name: "Unknown", err: errors.New("unknown error"), expected: UnknownCode},
+		{name: "WithCode", err: &baseError{code: 123}, expected: 123},
+		{name: "ChainWithCode", err: &baseError{code: 0, cause: &baseError{code: 456}}, expected: 456},
+		{name: "ChainWithUnknown", err: &baseError{cause: errors.New("unknown error")}, expected: UnknownCode},
+	}
+
+	// Run each test case
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := EffectiveCode(tc.err)
+			if actual != tc.expected {
+				t.Errorf("Expected code %d but got %d", tc.expected, actual)
+			}
+		})
+	}
+}
