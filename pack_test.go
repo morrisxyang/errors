@@ -328,6 +328,8 @@ func TestEffectiveCode(t *testing.T) {
 		{name: "Unknown", err: errors.New("unknown error"), expected: UnknownCode},
 		{name: "WithCode", err: &baseError{code: 123}, expected: 123},
 		{name: "ChainWithCode", err: &baseError{code: 0, cause: &baseError{code: 456}}, expected: 456},
+		{name: "ChainWithMultiCode",
+			err: &baseError{code: 0, cause: &baseError{code: 123, cause: &baseError{code: 456}}}, expected: 123},
 		{name: "ChainWithUnknown", err: &baseError{cause: errors.New("unknown error")}, expected: UnknownCode},
 	}
 
