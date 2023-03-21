@@ -9,7 +9,7 @@
 
 - 支持携带堆栈, 嵌套构造错误链
 
-- 支持携带错误码, 方便接口返回.
+- 支持携带错误码, 方便接口返回
 
 - 支持自定义堆栈打印深度和错误链打印格式
 
@@ -19,7 +19,7 @@
 
 ## 安装和文档
 
-安装使用 `go get github.com/morrisxyang/errors`.
+安装使用 `go get github.com/morrisxyang/errors`
 
 文档地址是 https://pkg.go.dev/github.com/morrisxyang/errors
 
@@ -100,6 +100,9 @@ github.com/morrisxyang/errors.a
 ## FAQ
 
 1. 多次 Wrap 错误会携带多次堆栈吗?
+
    可在调用链路上多次Wrap, 添加说明信息, 但只有最深层的Wrap操作会设置堆栈, 继续 `Wrap`, `return err` 等操作不会影响堆栈信息
+
 2. 在链路中某个错误设置了合适的错误码, 然后继续Wrap时没有设置, 如何获取?
+
    建议在合适的清晰的时机设置有效的错误码, 可以使用`EffectiveCode`获取链路中外层第一个有效的非0错误码, 由于系统调用等情况, 同一链路中可能有多个错误携带错误码, 此时默认外层的错误码应该对外暴露, 屏蔽了内层的详细信息.
