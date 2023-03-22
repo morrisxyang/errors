@@ -15,7 +15,7 @@
 
 - 使用 CallersFrames 替代 FuncForPC 生成堆栈, 避免特殊情况`line number错误`等问题, 详见[runtime: strongly encourage using CallersFrames over FuncForPC with Callers result](https://github.com/golang/go/issues/19426)
 
-- 简化堆栈信息, 一条链路只保留最深层堆栈, 只打印一次.
+- 简化堆栈信息, 一条链路只保留最深层堆栈, 只打印一次
 
 ## 安装和文档
 
