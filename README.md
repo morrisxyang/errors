@@ -5,6 +5,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/morrisxyang/errors)](https://goreportcard.com/report/github.com/morrisxyang/errors)
 ![Static Badge](https://img.shields.io/badge/go%20verion-%3E%3D1.15-blue)
 
+[中文README](https://github.com/morrisxyang/errors/blob/master/README_CN.md)
+
 A simple error library that supports **error stacks**, **error codes**, and **error chains**:
 
 - Supports carrying **stacks** and constructing nested error **chains**
@@ -16,8 +18,6 @@ A simple error library that supports **error stacks**, **error codes**, and **er
 - Uses CallersFrames instead of FuncForPC to generate stacks, avoiding issues such as "line number errors" in special cases, see [runtime: strongly encourage using CallersFrames over FuncForPC with Callers result](https://github.com/golang/go/issues/19426)
 
 - Simplifies stack information when using multiple `Wrap` operations by only keeping **the deepest stack** in a chain and printing it only once.
-
-[中文README](https://github.com/morrisxyang/errors/blob/master/README_CN.md)
 
 ## Installation and Docs
 
